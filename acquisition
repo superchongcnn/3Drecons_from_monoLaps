@@ -1,0 +1,6 @@
+import cv2
+import glob
+
+# Load images from a directory
+image_files = glob.glob('path/to/laparoscope/images/*.jpg')
+images = [cv2.imread(img) for img in image_files]

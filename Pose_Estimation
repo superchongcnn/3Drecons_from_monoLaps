@@ -1,0 +1,27 @@
+import numpy as np
+
+# Function to find good matches using the ratio test
+def get_good_matches(matches):
+    good_matches = []
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good_matches.append(m)
+    return good_matches
+
+# Find essential matrix and recover pose (R, t)
+K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])  # Camera intrinsic matrix
+essential_matrices = []
+Rs = []
+ts = []
+
+for i in range(len(matches)):
+    good_matches = get_good_matches(matches[i])
+    src_pts = np.float32([keypoints[i][m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+    dst_pts = np.float32([keypoints[i + 1][m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+    E, mask = cv2.findEssentialMat(src_pts, dst_pts, K, method=cv2.RANSAC, prob=0.999, threshold=1.0)
+    _, R, t, mask = cv2.recoverPose(E, src_pts, dst_pts, K)
+
+    essential_matrices.append(E)
+    Rs.append(R)
+    ts.append(t)

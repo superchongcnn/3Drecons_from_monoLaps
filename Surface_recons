@@ -1,0 +1,14 @@
+import open3d as o3d
+
+# Convert points_3d to Open3D format
+pcd = o3d.geometry.PointCloud()
+pcd.points = o3d.utility.Vector3dVector(points_3d)
+
+# Estimate normals
+pcd.estimate_normals()
+
+# Surface reconstruction using Poisson reconstruction
+mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=9)
+
+# Visualize the mesh
+o3d.visualization.draw_geometries([mesh])

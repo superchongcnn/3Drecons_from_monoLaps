@@ -1,0 +1,20 @@
+import cv2
+
+# Initialize SIFT detector
+sift = cv2.SIFT_create()
+
+# Detect features and compute descriptors
+keypoints = []
+descriptors = []
+
+for img in images:
+    kp, des = sift.detectAndCompute(img, None)
+    keypoints.append(kp)
+    descriptors.append(des)
+
+# Match features between consecutive images
+bf = cv2.BFMatcher()
+matches = []
+
+for i in range(len(images) - 1):
+    matches.append(bf.knnMatch(descriptors[i], descriptors[i + 1], k=2))

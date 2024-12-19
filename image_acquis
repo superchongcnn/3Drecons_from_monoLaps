@@ -1,0 +1,31 @@
+# 2. Image acquisition and preprocessing
+# src/image_acquisition.py
+
+import cv2
+import numpy as np
+from pathlib import Path
+
+class ImageAcquisition:
+    def __init__(self, config):
+        self.config = config
+
+    def load_images(self, directory):
+        """Load images from directory"""
+        image_paths = sorted(Path(directory).glob('*.jpg'))
+        images = []
+        for img_path in image_paths:
+            img = cv2.imread(str(img_path))
+            if img is not None:
+                images.append(img)
+        return images
+
+    def preprocess_image(self, image):
+        """Preprocess image for feature detection"""
+        # Convert to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # Apply contrast enhancement
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        enhanced = clahe.apply(gray)
+        # Apply denoising
+        denoised = cv2.fastNlMeansDenoising(enhanced)
+        return denoised

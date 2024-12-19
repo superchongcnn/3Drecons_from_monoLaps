@@ -1,0 +1,27 @@
+# 3. Feature extraction and matching
+# src/feature_extraction.py
+
+import cv2
+import numpy as np
+
+class FeatureExtractor:
+    def __init__(self, config):
+        self.config = config
+        self.sift = cv2.SIFT_create(self.config.MAX_FEATURES)
+        self.matcher = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+
+    def detect_and_compute(self, image):
+        """Detect and compute SIFT features"""
+        keypoints, descriptors = self.sift.detectAndCompute(image, None)
+        return keypoints, descriptors
+
+    def match_features(self, desc1, desc2):
+        """Match features between two images"""
+        matches = self.matcher.match(desc1, desc2)
+        matches = sorted(matches, key=lambda x: x.distance)
+        
+        # Keep only the top matches
+        num_good_matches = int(len(matches) * self.config.GOOD_MATCH_PERCENT)
+        matches = matches[:num_good_matches]
+        
+        return matches

@@ -1,0 +1,16 @@
+class SpatioTemporalModule(nn.Module):
+    def __init__(self):
+        self.spatial_encoder = SpatialFeatureEncoder()
+        self.temporal_encoder = TemporalFeatureEncoder()
+        self.fusion_layer = CrossAttentionFusion()
+        
+    def forward(self, current_frame, history_frames):
+        # 空间特征编码
+        spatial_feat = self.spatial_encoder(current_frame)
+        
+        # 时序特征编码
+        temporal_feat = self.temporal_encoder(history_frames)
+        
+        # 特征融合
+        fused_feat = self.fusion_layer(spatial_feat, temporal_feat)
+        return fused_feat

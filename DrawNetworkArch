@@ -1,0 +1,61 @@
+digraph MonocularEndoscope3DReconstruction {
+    // 设置整体图表属性
+    rankdir=LR; // 从左到右布局 (也可改为 TB 上到下)
+    fontsize=12;
+    labelloc="t";
+    label="医用单目内窥镜三维重建流程（示例）";
+
+    // 定义子图或者复合节点，可用cluster包围以画出“虚线框”
+    subgraph cluster_0 {
+        label="预处理 & 时空融合 (数据流)";
+        color="#AAAAAA";
+        style="rounded,dashed";
+        fontsize=11;
+
+        Preprocess[label="畸变校正\n图像增强", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+        ConvLSTM[label="时空融合层\n(ConvLSTM等)", shape=rectangle, style=filled, fillcolor="#FFDDAA"];
+        FeatureMatch[label="特征提取\n & 匹配", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+        RANSAC[label="RANSAC\n去外点", shape=diamond, style=filled, fillcolor="#FFEECC"];
+        NonRigid[label="非刚体形变校正", shape=rectangle, style=filled, fillcolor="#FFEEAA"];
+
+        // 节点串联
+        Preprocess -> ConvLSTM -> FeatureMatch -> RANSAC -> NonRigid;
+    }
+
+    subgraph cluster_1 {
+        label="位姿估计 & BA (优化流)";
+        color="#66CC99";
+        style="rounded,dashed";
+        fontsize=11;
+
+        PoseEst[label="位姿估计", shape=rectangle, style=filled, fillcolor="#CCFFCC"];
+        BA[label="轨迹优化\n(BA)", shape=rectangle, style=filled, fillcolor="#99FF99"];
+        IncMechanism[label="增量处理机制", shape=rectangle, style=filled, fillcolor="#CCFFCC"];
+
+        // 优化流的拓扑
+        PoseEst -> BA -> IncMechanism;
+    }
+
+    // 其他节点：稠密重建 & 网格化 & 纹理等
+    DensePC[label="稠密点云生成", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+    PCFilter[label="点云滤波与优化", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+    Meshing[label="网格化", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+    Texture[label="纹理映射", shape=rectangle, style=filled, fillcolor="#EFEFEF"];
+    Model3D[label="消化系统内壁\n三维重建模型", shape=rectangle, style=filled, fillcolor="#DDDDFF"];
+    ModelOpt[label="三维模型验证\n与优化", shape=rectangle, style=filled, fillcolor="#DDDDFF"];
+
+    // 将两个子图连接：RANSAC/非刚体校正结果 -> 位姿估计
+    // 注：因为 RANSAC 之后需要给位姿估计提供正确的匹配点
+    //     同时非刚体校正也会对特征/点云做修正
+    NonRigid -> PoseEst [label="数据输入" style="bold"];
+
+    // 优化流输出再反馈
+    BA -> DensePC [label="优化后位姿" style="dashed"];
+
+    // 从稠密点云生成到后续处理
+    DensePC -> PCFilter -> Meshing -> Texture -> Model3D -> ModelOpt;
+
+    // 用一条箭头表示：增量式更新也可持续影响点云重建
+    IncMechanism -> DensePC [label="增量更新" style="dashed"];
+
+}
